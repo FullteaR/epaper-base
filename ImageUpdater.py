@@ -40,3 +40,6 @@ class ImageUpdater():
                 desc="Uploading images"
             )
         return results
+    
+    def update(self):
+        raise Exception("Please override this function.")
