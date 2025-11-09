@@ -67,18 +67,15 @@ class WebsiteUpdater(ImageUpdater):
             options=options
         )
         try:
-            # ウィンドウサイズ
-            driver.set_window_size(int(800*1.5), int(480*1.5))
 
             # uBlockを一時インストール
             driver.install_addon(xpi_path, temporary=True)
-
-    
 
             outputs = []
             for url in urls:
                 # アドオン初回タブなどが開くことがあるので、対象URLで上書き
                 driver.get(url)
+                driver.set_window_size(int(800*1.5), int(480*1.5))
 
                 # DOMの安定待ち
                 WebDriverWait(driver, 30).until(
