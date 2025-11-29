@@ -1,6 +1,7 @@
 from WebsiteUpdater import WebsiteUpdater
 from IllustUpdater import IllustUpdater
 from WeatherUpdater import WeatherUpdater
+from StockUpdater import StockUpdater
 import time
 
 illustUpdater = IllustUpdater("./images/illust")
@@ -12,9 +13,10 @@ newsUpdater = WebsiteUpdater(
     ]
 )
 weatherUpdater = WeatherUpdater()
+stockUpdater = StockUpdater()
 
 while True:
-    for updater in [newsUpdater, illustUpdater, weatherUpdater]:
+    for updater in [newsUpdater, illustUpdater, weatherUpdater, stockUpdater]:
         updater.update()
         time.sleep(15*60)
 

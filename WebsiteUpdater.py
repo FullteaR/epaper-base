@@ -1,5 +1,6 @@
 import io
 import os
+import glob
 import re
 import time
 from PIL import Image
@@ -88,6 +89,9 @@ class WebsiteUpdater(ImageUpdater):
             return outputs
             
         finally:
+            xpi_files = glob.glob(os.path.join("/tmp", '*.xpi'))
+            for file in xpi_files:
+                os.remove(file)
             driver.quit()
     
     def update(self):
