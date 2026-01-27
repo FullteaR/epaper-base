@@ -23,6 +23,20 @@ class TrainUpdater(ImageUpdater):
                 "stations": [
                     {
                         "name": "新橋",
+                        "operator": "JR-East",
+                        "line": "Yamanote",
+                        "line_ja": "山手線",
+                        "station_id": "odpt.Station:JR-East.Yamanote.Shimbashi"
+                    },
+                    {
+                        "name": "新橋",
+                        "operator": "JR-East",
+                        "line": "Yokosuka",
+                        "line_ja": "横須賀線",
+                        "station_id": "odpt.Station:JR-East.Yokosuka.Shimbashi"
+                    },
+                    {
+                        "name": "新橋",
                         "operator": "TokyoMetro",
                         "line": "Ginza",
                         "line_ja": "銀座線",
@@ -167,6 +181,12 @@ class TrainUpdater(ImageUpdater):
             "Toei.Mita.NishiTakashimadaira": "西高島平方面",
             "Yurikamome.Yurikamome.Shimbashi": "新橋方面",
             "Yurikamome.Yurikamome.Toyosu": "豊洲方面",
+            "JR-East.Yamanote.Clockwise": "外回り",
+            "JR-East.Yamanote.Counterclockwise": "内回り",
+            "JR-East.Yokosuka.Ofuna": "大船方面",
+            "JR-East.Yokosuka.Tokyo": "東京方面",
+            "JR-East.Yokosuka.Kurihama": "久里浜方面",
+            "JR-East.Yokosuka.Zushi": "逗子方面",
         }
         
         self.RAILWAY_NAME_MAP = {
