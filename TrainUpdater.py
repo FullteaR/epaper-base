@@ -17,50 +17,33 @@ class TrainUpdater(ImageUpdater):
         self.API_BASE = "https://api.odpt.org/api/v4"
         self.API_KEY = os.environ.get("ODPT_API_KEY", "YOUR_API_KEY_HERE")
         
-        self.STATION_CONFIG = {
+        self.BUS_CONFIG = {
             "screen1": {
-                "title": "新橋 時刻表",
-                "stations": [
+                "title": "都営バス 時刻表",
+                "stops": [
                     {
-                        "name": "新橋",
-                        "operator": "JR-East",
-                        "line": "Yamanote",
-                        "line_ja": "山手線",
-                        "station_id": "odpt.Station:JR-East.Yamanote.Shimbashi"
+                        "name": "虎ノ門",
+                        "stop_id": "odpt.BusstopPole:Toei.Toranomon"
                     },
                     {
-                        "name": "新橋",
-                        "operator": "JR-East",
-                        "line": "Yokosuka",
-                        "line_ja": "横須賀線",
-                        "station_id": "odpt.Station:JR-East.Yokosuka.Shimbashi"
-                    },
-                    {
-                        "name": "新橋",
-                        "operator": "TokyoMetro",
-                        "line": "Ginza",
-                        "line_ja": "銀座線",
-                        "station_id": "odpt.Station:TokyoMetro.Ginza.Shimbashi"
-                    },
-                    {
-                        "name": "新橋",
-                        "operator": "Toei",
-                        "line": "Asakusa",
-                        "line_ja": "浅草線",
-                        "station_id": "odpt.Station:Toei.Asakusa.Shimbashi"
-                    },
-                    {
-                        "name": "新橋",
-                        "operator": "Yurikamome",
-                        "line": "Yurikamome",
-                        "line_ja": "ゆりかもめ",
-                        "station_id": "odpt.Station:Yurikamome.Yurikamome.Shimbashi"
+                        "name": "新橋駅前",
+                        "stop_id": "odpt.BusstopPole:Toei.Shimbashiekimae"
                     },
                 ]
-            },
+            }
+        }
+        
+        self.STATION_CONFIG = {
             "screen3": {
-                "title": "虎ノ門ヒルズ・御成門 時刻表",
+                "title": "虎ノ門エリア 時刻表",
                 "stations": [
+                    {
+                        "name": "御成門",
+                        "operator": "Toei",
+                        "line": "Mita",
+                        "line_ja": "三田線",
+                        "station_id": "odpt.Station:Toei.Mita.Onarimon"
+                    },
                     {
                         "name": "虎ノ門ヒルズ",
                         "operator": "TokyoMetro",
@@ -69,11 +52,18 @@ class TrainUpdater(ImageUpdater):
                         "station_id": "odpt.Station:TokyoMetro.Hibiya.ToranomonHills"
                     },
                     {
-                        "name": "御成門",
-                        "operator": "Toei",
-                        "line": "Mita",
-                        "line_ja": "三田線",
-                        "station_id": "odpt.Station:Toei.Mita.Onarimon"
+                        "name": "神谷町",
+                        "operator": "TokyoMetro",
+                        "line": "Hibiya",
+                        "line_ja": "日比谷線",
+                        "station_id": "odpt.Station:TokyoMetro.Hibiya.Kamiyacho"
+                    },
+                    {
+                        "name": "虎ノ門",
+                        "operator": "TokyoMetro",
+                        "line": "Ginza",
+                        "line_ja": "銀座線",
+                        "station_id": "odpt.Station:TokyoMetro.Ginza.Toranomon"
                     }
                 ]
             }
@@ -181,12 +171,6 @@ class TrainUpdater(ImageUpdater):
             "Toei.Mita.NishiTakashimadaira": "西高島平方面",
             "Yurikamome.Yurikamome.Shimbashi": "新橋方面",
             "Yurikamome.Yurikamome.Toyosu": "豊洲方面",
-            "JR-East.Yamanote.Clockwise": "外回り",
-            "JR-East.Yamanote.Counterclockwise": "内回り",
-            "JR-East.Yokosuka.Ofuna": "大船方面",
-            "JR-East.Yokosuka.Tokyo": "東京方面",
-            "JR-East.Yokosuka.Kurihama": "久里浜方面",
-            "JR-East.Yokosuka.Zushi": "逗子方面",
         }
         
         self.RAILWAY_NAME_MAP = {
@@ -301,6 +285,75 @@ class TrainUpdater(ImageUpdater):
                 print(f"Error fetching train info for {operator}: {e}")
         
         return all_info
+
+    def fetch_bus_stop_timetable(self, stop_id):
+        url = f"{self.API_BASE}/odpt:BusstopPoleTimetable"
+        params = {
+            "odpt:busstopPole": stop_id,
+            "acl:consumerKey": self.API_KEY
+        }
+        try:
+            resp = requests.get(url, params=params, timeout=15)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            print(f"Error fetching bus timetable for {stop_id}: {e}")
+            return []
+
+    def get_upcoming_buses(self, timetable_data, num_buses=5):
+        now = datetime.now(self.JST)
+        current_time = now.strftime("%H:%M")
+        weekday = now.weekday()
+        
+        if weekday < 5:
+            calendar_type = "Weekday"
+        elif weekday == 5:
+            calendar_type = "Saturday"
+        else:
+            calendar_type = "Holiday"
+        
+        buses = []
+        seen_times = set()
+        
+        for timetable in timetable_data:
+            cal = timetable.get("odpt:calendar", "")
+            if calendar_type not in cal and "SaturdayHoliday" not in cal:
+                if calendar_type in ["Saturday", "Holiday"] and "SaturdayHoliday" in cal:
+                    pass
+                else:
+                    continue
+            
+            busroute = timetable.get("odpt:busroute", "")
+            if isinstance(busroute, list):
+                busroute = busroute[0] if busroute else ""
+            route_name = busroute.split(".")[-1] if busroute else ""
+            
+            destination = timetable.get("odpt:destinationBusstopPole", "")
+            if isinstance(destination, list):
+                destination = destination[0] if destination else ""
+            dest_name = destination.split(".")[-1] if destination else ""
+            
+            bus_objects = timetable.get("odpt:busstopPoleTimetableObject", [])
+            
+            for bus in bus_objects:
+                dep_time = bus.get("odpt:departureTime", "")
+                if not dep_time:
+                    continue
+                
+                if dep_time >= current_time:
+                    time_key = f"{dep_time}_{route_name}_{dest_name}"
+                    if time_key in seen_times:
+                        continue
+                    seen_times.add(time_key)
+                    
+                    buses.append({
+                        "time": dep_time,
+                        "route": route_name,
+                        "destination": dest_name,
+                    })
+        
+        buses.sort(key=lambda x: x["time"])
+        return buses[:num_buses]
 
     def translate_station_name(self, name):
         if not name:
@@ -507,6 +560,95 @@ class TrainUpdater(ImageUpdater):
         
         return img
 
+    def make_bus_screen(self, config, screen_width=800, screen_height=480):
+        bg_color = (245, 245, 250)
+        text_color = (30, 30, 30)
+        sub_color = (100, 100, 100)
+        
+        img = Image.new("RGB", (screen_width, screen_height), color=bg_color)
+        draw = ImageDraw.Draw(img)
+        
+        try:
+            f_title = ImageFont.truetype(self.FONT_BOLD_PATH, 24)
+            f_stop = ImageFont.truetype(self.FONT_BOLD_PATH, 16)
+            f_time = ImageFont.truetype(self.FONT_BOLD_PATH, 16)
+            f_route = ImageFont.truetype(self.FONT_REG_PATH, 14)
+            f_dest = ImageFont.truetype(self.FONT_REG_PATH, 13)
+        except:
+            f_title = f_stop = f_time = f_route = f_dest = ImageFont.load_default()
+        
+        now = datetime.now(self.JST)
+        draw.text((15, 10), config["title"], font=f_title, fill=text_color)
+        draw.text((screen_width - 80, 12), now.strftime("%H:%M"), font=f_title, fill=text_color)
+        
+        y_start = 50
+        stops = config["stops"]
+        num_stops = len(stops)
+        
+        if num_stops == 1:
+            col_width = screen_width - 20
+            num_cols = 1
+        else:
+            num_cols = 2
+            col_width = (screen_width - 30) // 2
+        
+        rows_per_col = (num_stops + num_cols - 1) // num_cols
+        stop_height = (screen_height - y_start - 10) // rows_per_col
+        
+        for idx, stop in enumerate(stops):
+            col = idx // rows_per_col
+            row = idx % rows_per_col
+            
+            x_offset = 10 + col * (col_width + 10)
+            y_offset = y_start + row * stop_height
+            
+            bus_color = (0, 128, 0)
+            draw.rectangle((x_offset, y_offset, x_offset + 6, y_offset + stop_height - 8), fill=bus_color)
+            
+            stop_label = f"{stop['name']} バス停"
+            draw.text((x_offset + 12, y_offset + 2), stop_label, font=f_stop, fill=text_color)
+            
+            timetable_data = self.fetch_bus_stop_timetable(stop["stop_id"])
+            buses = self.get_upcoming_buses(timetable_data, num_buses=8)
+            
+            if buses:
+                bus_y = y_offset + 28
+                
+                for bus in buses:
+                    if bus_y + 20 > y_offset + stop_height - 5:
+                        break
+                    
+                    time_text = bus["time"]
+                    route_text = bus["route"]
+                    dest_text = bus["destination"]
+                    
+                    draw.text((x_offset + 12, bus_y), time_text, font=f_time, fill=text_color)
+                    
+                    route_display = route_text if route_text else ""
+                    if len(route_display) > 10:
+                        route_display = route_display[:10]
+                    draw.text((x_offset + 65, bus_y), route_display, font=f_route, fill=(0, 100, 0))
+                    
+                    dest_display = f"→ {dest_text}" if dest_text else ""
+                    if len(dest_display) > 15:
+                        dest_display = dest_display[:15]
+                    draw.text((x_offset + 150, bus_y), dest_display, font=f_dest, fill=sub_color)
+                    
+                    bus_y += 22
+            else:
+                draw.text((x_offset + 12, y_offset + 30), "バス時刻表データなし", font=f_dest, fill=sub_color)
+            
+            if row < rows_per_col - 1:
+                draw.line((x_offset + 10, y_offset + stop_height - 5, 
+                          x_offset + col_width - 10, y_offset + stop_height - 5), 
+                         fill=(200, 200, 200), width=1)
+        
+        if num_cols == 2:
+            mid_x = screen_width // 2
+            draw.line((mid_x, y_start, mid_x, screen_height - 10), fill=(180, 180, 180), width=1)
+        
+        return img
+
     def make_delay_screen(self, screen_width=800, screen_height=480):
         bg_color = (245, 245, 250)
         text_color = (30, 30, 30)
@@ -621,7 +763,7 @@ class TrainUpdater(ImageUpdater):
 
     def update(self):
         try:
-            img_screen1 = self.make_timetable_screen(self.STATION_CONFIG["screen1"])
+            img_screen1 = self.make_bus_screen(self.BUS_CONFIG["screen1"])
             img_screen2 = self.make_delay_screen()
             img_screen3 = self.make_timetable_screen(self.STATION_CONFIG["screen3"])
             
