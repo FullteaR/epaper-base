@@ -19,15 +19,8 @@ class TrainUpdater(ImageUpdater):
         
         self.STATION_CONFIG = {
             "screen1": {
-                "title": "虎ノ門ヒルズ・新橋 時刻表",
+                "title": "新橋 時刻表",
                 "stations": [
-                    {
-                        "name": "虎ノ門ヒルズ",
-                        "operator": "TokyoMetro",
-                        "line": "Hibiya",
-                        "line_ja": "日比谷線",
-                        "station_id": "odpt.Station:TokyoMetro.Hibiya.ToranomonHills"
-                    },
                     {
                         "name": "新橋",
                         "operator": "TokyoMetro",
@@ -52,8 +45,15 @@ class TrainUpdater(ImageUpdater):
                 ]
             },
             "screen3": {
-                "title": "御成門 時刻表",
+                "title": "虎ノ門ヒルズ・御成門 時刻表",
                 "stations": [
+                    {
+                        "name": "虎ノ門ヒルズ",
+                        "operator": "TokyoMetro",
+                        "line": "Hibiya",
+                        "line_ja": "日比谷線",
+                        "station_id": "odpt.Station:TokyoMetro.Hibiya.ToranomonHills"
+                    },
                     {
                         "name": "御成門",
                         "operator": "Toei",
@@ -335,7 +335,8 @@ class TrainUpdater(ImageUpdater):
             if direction_key not in directions:
                 directions[direction_key] = {
                     "direction_ja": direction_ja,
-                    "trains": []
+                    "trains": [],
+                    "seen_times": set()
                 }
             
             train_objects = timetable.get("odpt:stationTimetableObject", [])
@@ -346,6 +347,10 @@ class TrainUpdater(ImageUpdater):
                     continue
                 
                 if dep_time >= current_time:
+                    if dep_time in directions[direction_key]["seen_times"]:
+                        continue
+                    directions[direction_key]["seen_times"].add(dep_time)
+                    
                     train_type_raw = train.get("odpt:trainType", "")
                     train_type_ja = self.translate_train_type(train_type_raw)
                     
@@ -365,6 +370,7 @@ class TrainUpdater(ImageUpdater):
         for direction_key in directions:
             directions[direction_key]["trains"].sort(key=lambda x: x["time"])
             directions[direction_key]["trains"] = directions[direction_key]["trains"][:num_trains]
+            del directions[direction_key]["seen_times"]
         
         return directions
 
