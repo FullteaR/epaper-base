@@ -138,6 +138,9 @@ class TrainUpdater(ImageUpdater):
             "Hiratsuka": "平塚",
             "Shinkiba": "新木場",
             "Ariake": "有明",
+            "ShirokaneTakanawa": "白金高輪",
+            "TobuDobutsuKoen": "東武動物公園",
+            "KitaKasukabe": "北春日部"
         }
         
         self.TRAIN_TYPE_MAP = {
@@ -545,7 +548,7 @@ class TrainUpdater(ImageUpdater):
                         train_y += 18
                     
                     if not dir_data["trains"]:
-                        draw.text((dir_x, dir_y + 18), "データなし", font=f_dest, fill=sub_color)
+                        draw.text((dir_x, dir_y + 18), "データなS", font=f_dest, fill=sub_color)
             else:
                 draw.text((x_offset + 12, y_offset + 25), "時刻表データなし", font=f_dest, fill=sub_color)
             
