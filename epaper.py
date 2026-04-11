@@ -5,6 +5,7 @@ from StockUpdater import StockUpdater
 from TrainUpdater import TrainUpdater
 import time
 
+
 illustUpdater = IllustUpdater("./images/illust")
 newsUpdater = WebsiteUpdater(
     [
@@ -18,8 +19,11 @@ stockUpdater = StockUpdater()
 trainUpdater = TrainUpdater()
 
 while True:
-    for updater in [newsUpdater, illustUpdater, weatherUpdater, stockUpdater, trainUpdater]:
-        updater.update()
-        time.sleep(15*60)
+    for updater in [trainUpdater, newsUpdater, illustUpdater, weatherUpdater, stockUpdater]:
+        try:
+            updater.update()
+            time.sleep(15*60)
+        except:
+            continue
 
 
