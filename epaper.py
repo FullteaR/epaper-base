@@ -4,7 +4,8 @@ from WeatherUpdater import WeatherUpdater
 from StockUpdater import StockUpdater
 from TrainUpdater import TrainUpdater
 from ExhibitionUpdater import ExhibitionUpdater
-from PrometheusUpdater import PrometheusUpdater
+from NodeUpdater import NodeUpdater
+from KafkaUpdater import KafkaUpdater
 import time
 
 
@@ -20,10 +21,11 @@ weatherUpdater = WeatherUpdater()
 stockUpdater = StockUpdater()
 trainUpdater = TrainUpdater()
 exhibitionUpdater = ExhibitionUpdater()
-prometheusUpdater = PrometheusUpdater()
+nodeUpdater = NodeUpdater()
+kafkaUpdater = KafkaUpdater()
 
 while True:
-    for updater in [trainUpdater, newsUpdater, illustUpdater, weatherUpdater, stockUpdater, exhibitionUpdater, prometheusUpdater]:
+    for updater in [trainUpdater, newsUpdater, illustUpdater, weatherUpdater, stockUpdater, exhibitionUpdater, nodeUpdater, kafkaUpdater]:
         try:
             updater.update()
             time.sleep(15*60)
