@@ -6,6 +6,7 @@ from TrainUpdater import TrainUpdater
 from ExhibitionUpdater import ExhibitionUpdater
 from NodeUpdater import NodeUpdater
 from KafkaUpdater import KafkaUpdater
+from ElasticSearchUpdater import ElasticSearchUpdater
 import time
 
 
@@ -23,9 +24,10 @@ trainUpdater = TrainUpdater()
 exhibitionUpdater = ExhibitionUpdater()
 nodeUpdater = NodeUpdater()
 kafkaUpdater = KafkaUpdater()
+esUpdater = ElasticSearchUpdater()
 
 while True:
-    for updater in [trainUpdater, newsUpdater, illustUpdater, weatherUpdater, stockUpdater, exhibitionUpdater, nodeUpdater, kafkaUpdater]:
+    for updater in [trainUpdater, newsUpdater, illustUpdater, weatherUpdater, stockUpdater, exhibitionUpdater, nodeUpdater, kafkaUpdater, esUpdater]:
         try:
             updater.update()
             time.sleep(15*60)
