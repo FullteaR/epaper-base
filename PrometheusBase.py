@@ -84,8 +84,9 @@ class PrometheusBase(ImageUpdater):
             print(f"[Prometheus] multi-key query failed: {promql[:60]}... → {e}")
             return {}
 
-    def _query_range(self, promql: str, duration_s: int = 3600, step: int = 300) -> dict[str, list[float]]:
-        """range query → {instance: [values]}"""
+    def _query_range(self, promql: str, duration_s: int = 3600, step: int = 300,
+                     key: str = "instance") -> dict[str, list[float]]:
+        """range query → {key_label_value: [values]}"""
         now = int(time.time())
         try:
             r = self._session.get(
@@ -101,8 +102,7 @@ class PrometheusBase(ImageUpdater):
             r.raise_for_status()
             out = {}
             for item in r.json()["data"]["result"]:
-                inst = item["metric"].get("instance", "")
-                out[inst] = [float(v[1]) for v in item["values"]]
+                out[item["metric"].get(key, "")] = [float(v[1]) for v in item["values"]]
             return out
         except Exception as e:
             print(f"[Prometheus] range query failed: {promql[:60]}... → {e}")
