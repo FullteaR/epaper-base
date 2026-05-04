@@ -30,6 +30,7 @@ NAME_X   = 20    # インデックス名
 DOCS_X   = 185   # ドキュメント数
 STORE_X  = 248   # ストレージ
 DELTA_X  = 318   # Δ10m
+STATUS_X = 354   # health テキスト (YELLOW/RED)
 NAME_MAX = 22    # (NAME_X + NAME_MAX*7 ≈ DOCS_X)
 
 
@@ -224,7 +225,8 @@ class ElasticSearchUpdater(PrometheusBase):
             draw.text((cx + NAME_X,  30), "Index", font=f_hdr, fill=COLOR_SUB)
             draw.text((cx + DOCS_X,  30), "Docs",  font=f_hdr, fill=COLOR_SUB)
             draw.text((cx + STORE_X, 30), "Store", font=f_hdr, fill=COLOR_SUB)
-            draw.text((cx + DELTA_X, 30), "Δ10m",  font=f_hdr, fill=COLOR_SUB)
+            draw.text((cx + DELTA_X, 30), "Δ10m",   font=f_hdr, fill=COLOR_SUB)
+            draw.text((cx + STATUS_X, 30), "Health", font=f_hdr, fill=COLOR_SUB)
 
         draw.line([(0, 44), (800, 44)], fill=COLOR_BORDER, width=1)
         draw.line([(COL_W, 26), (COL_W, 479)], fill=COLOR_BORDER, width=1)
@@ -237,12 +239,23 @@ class ElasticSearchUpdater(PrometheusBase):
             ):
                 y = ROW_START_Y + row_idx * ROW_H
 
+                if hcolor == COLOR_CRIT:
+                    draw.rectangle([cx, y, cx + COL_W - 1, y + ROW_H - 2], fill=(255, 235, 235))
+                elif hcolor == COLOR_WARN:
+                    draw.rectangle([cx, y, cx + COL_W - 1, y + ROW_H - 2], fill=(255, 250, 220))
                 draw.ellipse((cx + 8, y + 6, cx + 16, y + 14), fill=hcolor)
                 draw.text((cx + NAME_X,  y + 2), name[:NAME_MAX],  font=f_body, fill=COLOR_FG)
                 draw.text((cx + DOCS_X,  y + 2), _fmt_docs(docs),  font=f_val,  fill=COLOR_FG)
                 draw.text((cx + STORE_X, y + 2), _fmt_bytes(store), font=f_val,  fill=COLOR_FG)
                 delta_str, delta_color = _fmt_delta(delta)
-                draw.text((cx + DELTA_X, y + 2), delta_str,        font=f_body, fill=delta_color)
+                draw.text((cx + DELTA_X,  y + 2), delta_str, font=f_body, fill=delta_color)
+                if hcolor == COLOR_CRIT:
+                    status_str, status_color = "RED",    COLOR_CRIT
+                elif hcolor == COLOR_WARN:
+                    status_str, status_color = "YELLOW", COLOR_WARN
+                else:
+                    status_str, status_color = "GREEN",  COLOR_OK
+                draw.text((cx + STATUS_X, y + 2), status_str, font=f_body, fill=status_color)
                 draw.line([(cx, y + ROW_H - 1), (cx + COL_W - 1, y + ROW_H - 1)],
                           fill=(230, 230, 230), width=1)
 
